@@ -1,19 +1,16 @@
-from onboard.models import Business, Customer, Location
-from rest_framework import serializers
- 
 
+from rest_framework import serializers
+
+from onboard.models import Customer
+ 
 class CustomerSerializer(serializers.ModelSerializer):
+    age_of_business = serializers.SerializerMethodField()
+
+    def get_age_of_business(self, obj):
+        from datetime import date
+        today = date.today()
+        return today.year - obj.business_registration_date.year
+
     class Meta:
         model = Customer
-        fields = '__all__'
-
-class BusinessSerializer(serializers.ModelSerializer):
-    age = serializers.ReadOnlyField()
-    class Meta:
-        model = Business
-        fields = '__all__'
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
         fields = '__all__'
