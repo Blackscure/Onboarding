@@ -1,3 +1,4 @@
+from django.db.models import Q
 from onboard.api.serializers import BusinessSerializer, CustomerSerializer, LocationSerializer
 from onboard.models import Business, Customer, Location
 from rest_framework.views import APIView
@@ -24,7 +25,7 @@ class CustomerListView(APIView):
                 serializer = CustomerSerializer(data=request.data)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response({"detail": "Customer created successfully."}, status=status.HTTP_201_CREATED)
+                    return Response({"detail": "Customer created successfully.", "data": serializer.data}, status=status.HTTP_201_CREATED)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
                 return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -42,17 +43,23 @@ class CustomerDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
-        customer = self.get_object(pk)
-        serializer = CustomerSerializer(customer, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        try:
+            customer = self.get_object(pk)
+            serializer = CustomerSerializer(customer, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"detail": "Customer updated successfully.", "data": serializer.data})
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
     def delete(self, request, pk):
-        customer = self.get_object(pk)
-        customer.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            try:
+                customer = self.get_object(pk)
+                customer.delete()
+                return Response({"detail": "Customer deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class BusinessListView(APIView):
     def get(self, request):
