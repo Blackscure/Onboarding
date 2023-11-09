@@ -12,11 +12,22 @@ class CustomerListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = CustomerSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                # Validate if customer with the same phone or email already exists
+                phone = request.data.get('phone')
+                email = request.data.get('email')
+
+                if Customer.objects.filter(Q(phone=phone) | Q(email=email)).exists():
+                    return Response({"detail": "Customer with the same phone or email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+                # If not, proceed to create the customer
+                serializer = CustomerSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"detail": "Customer created successfully."}, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CustomerDetailView(APIView):
     def get_object(self, pk):
