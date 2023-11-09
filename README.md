@@ -1,5 +1,8 @@
 # Onboarding
 
+## Swagger Link
+http://localhost:8000/swagger/
+
 Table Name: Customer
 
 Field Name	Data Type	Constraints
