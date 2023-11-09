@@ -68,11 +68,19 @@ class BusinessListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = BusinessSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                # Check if a business with the same name already exists
+                name = request.data.get('name')
+                if Business.objects.filter(name=name).exists():
+                    return Response({"detail": "A business with the same name already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+                serializer = BusinessSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"detail": "Business created successfully.", "data": serializer.data}, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class BusinessDetailView(APIView):
     def get_object(self, pk):
@@ -85,32 +93,59 @@ class BusinessDetailView(APIView):
         business = self.get_object(pk)
         serializer = BusinessSerializer(business)
         return Response(serializer.data)
-
+    
     def put(self, request, pk):
-        business = self.get_object(pk)
-        serializer = BusinessSerializer(business, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                business = self.get_object(pk)
+                serializer = BusinessSerializer(business, data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"detail": "Business updated successfully.", "data": serializer.data})
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, pk):
-        business = self.get_object(pk)
-        business.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+                try:
+                    business = self.get_object(pk)
+                    business.delete()
+                    return Response({"detail": "Business deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+                except Exception as e:
+                    return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LocationListView(APIView):
     def get(self, request):
         locations = Location.objects.all()
         serializer = LocationSerializer(locations, many=True)
         return Response(serializer.data)
-
+    
     def post(self, request):
-        serializer = LocationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Check if a location with the same details already exists
+            customer_id = request.data.get('customer')
+            county = request.data.get('county')
+            sub_county = request.data.get('sub_county')
+            ward = request.data.get('ward')
+            building_name = request.data.get('building_name')
+            floor = request.data.get('floor')
+
+            if Location.objects.filter(
+                customer=customer_id,
+                county=county,
+                sub_county=sub_county,
+                ward=ward,
+                building_name=building_name,
+                floor=floor
+            ).exists():
+                return Response({"detail": "A location with the same details already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = LocationSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"detail": "Location created successfully.", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LocationDetailView(APIView):
     def get_object(self, pk):
@@ -125,14 +160,20 @@ class LocationDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, pk):
-        location = self.get_object(pk)
-        serializer = LocationSerializer(location, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                location = self.get_object(pk)
+                serializer = LocationSerializer(location, data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"detail": "Location updated successfully.", "data": serializer.data})
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, pk):
-        location = self.get_object(pk)
-        location.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            try:
+                location = self.get_object(pk)
+                location.delete()
+                return Response({"detail": "Location deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+            except Exception as e:
+                return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

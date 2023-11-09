@@ -38,9 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'onboard'
+    'onboard',
+    'django_extensions',
+    'drf_yasg',
 
 ]
+
+GRAPH_MODELS = {
+    'all_applications': True,
+    'group_models': True,
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
